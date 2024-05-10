@@ -11,9 +11,11 @@ app.use(express.json());
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    console.log("Destination directory:", path.join(__dirname, "uploads"));
     cb(null, "uploads");
   },
   filename: function (req, file, cb) {
+    console.log("Original filename:", file.originalname);
     cb(
       null,
       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
@@ -28,29 +30,35 @@ const upload = multer({
 app.post("/convertDocxToPdf", (req, res) => {
   upload(req, res, (err) => {
     if (err) {
+      console.error("Upload error:", err);
       return res.status(500).json({ error: err.message });
     }
 
     // Check if a file has been uploaded
     if (!req.file) {
+      console.error("No file uploaded");
       return res.status(400).json({ error: "No file uploaded" });
     }
 
     const inputFilePath = req.file.path;
+    console.log("Input file path:", inputFilePath);
     const outputPath = "output.pdf";
 
     fs.readFile(inputFilePath, (err, data) => {
       if (err) {
+        console.error("Read file error:", err);
         return res.status(500).json({ error: err.message });
       }
       
       libreoffice.convert(data, ".pdf", undefined, (err, done) => {
         if (err) {
+          console.error("Conversion error:", err);
           return res.status(500).json({ error: err.message });
         }
 
         fs.writeFile(outputPath, done, (err) => {
           if (err) {
+            console.error("Write file error:", err);
             return res.status(500).json({ error: err.message });
           }
 
@@ -60,6 +68,7 @@ app.post("/convertDocxToPdf", (req, res) => {
           // Read the converted PDF data
           fs.readFile(outputPath, (err, pdfData) => {
             if (err) {
+              console.error("Read converted PDF error:", err);
               return res.status(500).json({ error: err.message });
             }
 
