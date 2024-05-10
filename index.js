@@ -9,13 +9,17 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+// Ensure that the uploads directory exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    console.log("Destination directory:", path.join(__dirname, "uploads"));
-    cb(null, "uploads");
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
-    console.log("Original filename:", file.originalname);
     cb(
       null,
       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
